@@ -1,7 +1,94 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  runtime  = "nodejs"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Channel {
+  email
+  sms
+  push
+  messenger
+}
+
+enum Region {
+  EU
+  US
+  UK
+  APAC
+  OTHER
+}
+
+enum NotificationCategory {
+  transactional
+  marketing
+}
+
+enum PolicyEffect {
+  allow
+  deny
+}
+
+model NotificationType {
+  type                     String                   @id
+  category                 NotificationCategory
+  suppressibleInQuietHours Boolean                  @map("suppressible_in_quiet_hours")
+  description              String?
+  defaults                 DefaultPreference[]
+  overrides                UserPreferenceOverride[]
+
+  @@map("notification_types")
+}
+
+model DefaultPreference {
+  notificationType String           @map("notification_type")
+  channel          Channel
+  enabled          Boolean
+  type             NotificationType @relation(fields: [notificationType], references: [type])
+
+  @@id([notificationType, channel])
+  @@map("default_preferences")
+}
+
+model User {
+  id            String                   @id
+  quietStart    String?                  @map("quiet_start")
+  quietEnd      String?                  @map("quiet_end")
+  quietTimezone String?                  @map("quiet_timezone")
+  createdAt     DateTime                 @default(now()) @map("created_at")
+  updatedAt     DateTime                 @updatedAt @map("updated_at")
+  overrides     UserPreferenceOverride[]
+
+  @@map("users")
+}
+
+model UserPreferenceOverride {
+  userId           String           @map("user_id")
+  notificationType String           @map("notification_type")
+  channel          Channel
+  enabled          Boolean
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             NotificationType @relation(fields: [notificationType], references: [type])
+
+  @@id([userId, notificationType, channel])
+  @@map("user_preference_overrides")
+}
+
+model GlobalPolicy {
+  id               String       @id @default(uuid()) @db.Uuid
+  effect           PolicyEffect @default(deny)
+  notificationType String?      @map("notification_type")
+  channel          Channel?
+  region           Region?
+  priority         Int          @default(0)
+  active           Boolean      @default(true)
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  @@index([region, notificationType, channel])
+  @@map("global_policies")
 }
