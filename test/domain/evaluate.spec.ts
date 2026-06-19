@@ -83,11 +83,19 @@ describe('evaluate', () => {
     });
   });
 
-  it('глобальная allow-политика -> allow', () => {
+  it('глобальная allow-политика включает выключенный по умолчанию тип', () => {
     const allowPolicy: GlobalPolicy = { ...denyPolicy, id: 'exempt', effect: 'allow' };
-    expect(evaluate(ctx({ userEnabled: false, matchingPolicy: allowPolicy }))).toEqual({
+    expect(evaluate(ctx({ defaultEnabled: false, matchingPolicy: allowPolicy }))).toEqual({
       decision: 'allow',
       reason: ReasonCode.ALLOWED_BY_GLOBAL_POLICY,
+    });
+  });
+
+  it('явный опт-аут пользователя сильнее разрешающей политики', () => {
+    const allowPolicy: GlobalPolicy = { ...denyPolicy, id: 'exempt', effect: 'allow' };
+    expect(evaluate(ctx({ userEnabled: false, matchingPolicy: allowPolicy }))).toEqual({
+      decision: 'deny',
+      reason: ReasonCode.DISABLED_BY_USER,
     });
   });
 

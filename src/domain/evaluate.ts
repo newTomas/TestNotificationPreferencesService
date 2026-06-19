@@ -22,17 +22,24 @@ const allow = (reason: ReasonCode): EvaluationResult => ({ decision: 'allow', re
 const deny = (reason: ReasonCode): EvaluationResult => ({ decision: 'deny', reason });
 
 export function evaluate(ctx: EvaluationContext): EvaluationResult {
-  if (ctx.matchingPolicy) {
-    return ctx.matchingPolicy.effect === 'deny'
-      ? deny(ReasonCode.BLOCKED_BY_GLOBAL_POLICY)
-      : allow(ReasonCode.ALLOWED_BY_GLOBAL_POLICY);
+  const policy = ctx.matchingPolicy;
+  if (policy?.effect === 'deny') {
+    return deny(ReasonCode.BLOCKED_BY_GLOBAL_POLICY);
   }
 
   const fromUser = ctx.userEnabled !== null;
-  const enabled = ctx.userEnabled ?? ctx.defaultEnabled;
 
-  if (!enabled) {
-    return deny(fromUser ? ReasonCode.DISABLED_BY_USER : ReasonCode.DISABLED_BY_DEFAULT);
+  // Явный опт-аут пользователя сильнее разрешающей политики; запрет (комплаенс) выше любого согласия.
+  if (fromUser && !ctx.userEnabled) {
+    return deny(ReasonCode.DISABLED_BY_USER);
+  }
+
+  if (policy?.effect === 'allow') {
+    return allow(ReasonCode.ALLOWED_BY_GLOBAL_POLICY);
+  }
+
+  if (!(ctx.userEnabled ?? ctx.defaultEnabled)) {
+    return deny(ReasonCode.DISABLED_BY_DEFAULT);
   }
 
   if (ctx.suppressibleInQuietHours && ctx.quietHours && isWithinQuietHours(ctx.now, ctx.quietHours)) {
