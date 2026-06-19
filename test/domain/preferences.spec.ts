@@ -49,4 +49,18 @@ describe('mergePreferences', () => {
       source: 'user',
     });
   });
+
+  it('оверрайд без дефолтной строки попадает в результат', () => {
+    const merged = mergePreferences(defaults, [
+      { notificationType: mktEmail, channel: 'sms', enabled: true },
+    ]);
+
+    expect(merged).toContainEqual({
+      notificationType: mktEmail,
+      channel: 'sms',
+      enabled: true,
+      source: 'user',
+    });
+    expect(merged).toHaveLength(defaults.length + 1);
+  });
 });

@@ -14,20 +14,17 @@ export interface EffectivePreference extends Preference {
 
 const key = (notificationType: NotificationType, channel: Channel) => `${notificationType}:${channel}`;
 
-// Эффективные настройки = дефолты, перекрытые индивидуальными настройками пользователя.
+// Эффективные настройки = объединение дефолтов и оверрайдов; оверрайд пользователя перекрывает дефолт.
 export function mergePreferences(
   defaults: readonly Preference[],
   overrides: readonly Preference[],
 ): EffectivePreference[] {
-  const overrideByKey = new Map(overrides.map((o) => [key(o.notificationType, o.channel), o]));
-
-  return defaults.map((preference) => {
-    const override = overrideByKey.get(key(preference.notificationType, preference.channel));
-    return {
-      notificationType: preference.notificationType,
-      channel: preference.channel,
-      enabled: override ? override.enabled : preference.enabled,
-      source: override ? 'user' : 'default',
-    };
-  });
+  const byKey = new Map<string, EffectivePreference>();
+  for (const preference of defaults) {
+    byKey.set(key(preference.notificationType, preference.channel), { ...preference, source: 'default' });
+  }
+  for (const override of overrides) {
+    byKey.set(key(override.notificationType, override.channel), { ...override, source: 'user' });
+  }
+  return [...byKey.values()];
 }
