@@ -44,7 +44,7 @@ beforeAll(async () => {
     noopMetrics,
   );
   getPreferences = new GetEffectivePreferencesUseCase(defaultRepository, preferenceRepository, catalog);
-  updatePreferences = new UpdatePreferencesUseCase(preferenceRepository, noopEventLogger, noopMetrics);
+  updatePreferences = new UpdatePreferencesUseCase(catalog, preferenceRepository, noopEventLogger, noopMetrics);
 });
 
 afterAll(async () => {

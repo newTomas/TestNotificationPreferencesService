@@ -30,6 +30,7 @@ export class PreferencesWorld {
     this.catalog,
   );
   readonly updatePreferences = new UpdatePreferencesUseCase(
+    this.catalog,
     this.preferences,
     noopEventLogger,
     noopMetrics,
