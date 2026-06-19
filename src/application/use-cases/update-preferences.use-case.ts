@@ -25,12 +25,10 @@ export class UpdatePreferencesUseCase {
     const toggles = command.toggles ?? [];
     await this.assertKnownTypes(toggles);
 
-    for (const toggle of toggles) {
-      await this.preferences.upsertOverride(userId, toggle);
-    }
-    if (command.quietHours !== undefined) {
-      await this.preferences.setQuietHours(userId, command.quietHours);
-    }
+    await this.preferences.applyUpdate(userId, {
+      toggles,
+      ...(command.quietHours !== undefined ? { quietHours: command.quietHours } : {}),
+    });
 
     this.logger.event('preference_changed', {
       userId,

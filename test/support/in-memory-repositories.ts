@@ -1,7 +1,7 @@
 import { DefaultPreferenceRepository } from '../../src/application/ports/default-preference.repository';
 import { NotificationCatalog } from '../../src/application/ports/notification-catalog';
 import { PolicyRepository } from '../../src/application/ports/policy.repository';
-import { PreferenceRepository } from '../../src/application/ports/preference.repository';
+import { PreferenceRepository, PreferenceUpdate } from '../../src/application/ports/preference.repository';
 import { NotificationDefinition } from '../../src/domain/notification-definition';
 import { GlobalPolicy } from '../../src/domain/policy';
 import { Preference } from '../../src/domain/preferences';
@@ -54,17 +54,21 @@ export class InMemoryPreferenceRepository implements PreferenceRepository {
     return this.quietHours.get(userId) ?? null;
   }
 
-  async upsertOverride(userId: string, preference: Preference) {
-    const byKey = this.overrides.get(userId) ?? new Map<string, Preference>();
-    byKey.set(overrideKey(preference.notificationType, preference.channel), preference);
-    this.overrides.set(userId, byKey);
-  }
-
-  async setQuietHours(userId: string, quietHours: QuietHours | null) {
-    if (quietHours === null) {
-      this.quietHours.delete(userId);
-    } else {
-      this.quietHours.set(userId, quietHours);
+  async applyUpdate(userId: string, update: PreferenceUpdate) {
+    if (update.toggles.length > 0) {
+      const byKey = this.overrides.get(userId) ?? new Map<string, Preference>();
+      for (const toggle of update.toggles) {
+        byKey.set(overrideKey(toggle.notificationType, toggle.channel), toggle);
+      }
+      this.overrides.set(userId, byKey);
+    }
+    if ('quietHours' in update) {
+      const quietHours = update.quietHours ?? null;
+      if (quietHours === null) {
+        this.quietHours.delete(userId);
+      } else {
+        this.quietHours.set(userId, quietHours);
+      }
     }
   }
 }
