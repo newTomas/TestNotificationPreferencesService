@@ -1,5 +1,7 @@
 import { z } from 'zod';
+import { TIME_PATTERN } from '../../../domain/quiet-hours';
+import { CHANNELS, REGIONS } from '../../../domain/types';
 
-export const channelSchema = z.enum(['email', 'sms', 'push', 'messenger']);
-export const regionSchema = z.enum(['EU', 'US', 'UK', 'APAC', 'OTHER']);
-export const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Формат времени — HH:mm');
+export const channelSchema = z.enum(CHANNELS);
+export const regionSchema = z.enum(REGIONS);
+export const timeSchema = z.string().regex(TIME_PATTERN, 'Формат времени — HH:mm');

@@ -7,7 +7,7 @@ export interface QuietHours {
   readonly timezone: string;
 }
 
-const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+export const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 export function makeQuietHours(start: string, end: string, timezone: string): QuietHours {
   if (!TIME_PATTERN.test(start) || !TIME_PATTERN.test(end)) {
