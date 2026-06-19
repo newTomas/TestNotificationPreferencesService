@@ -16,7 +16,12 @@ export class PrismaIdempotencyStore implements IdempotencyStore {
 
   async find(key: string) {
     const row = await this.prisma.idempotencyKey.findUnique({ where: { key } });
-    return row ? { requestHash: row.requestHash, body: row.response } : null;
+    if (!row) return null;
+    if (row.expiresAt <= new Date()) {
+      await this.prisma.idempotencyKey.deleteMany({ where: { key } });
+      return null;
+    }
+    return { requestHash: row.requestHash, body: row.response };
   }
 
   async save(key: string, requestHash: string, body: unknown) {
