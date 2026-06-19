@@ -11,6 +11,12 @@ export default tseslint.config(
       globals: { ...globals.node },
       parserOptions: { sourceType: 'module' },
     },
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+    },
   },
   {
     // Граница чистой архитектуры: доменный слой не зависит от фреймворков и внешних слоёв.

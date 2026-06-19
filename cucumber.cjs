@@ -3,7 +3,7 @@ module.exports = {
     requireModule: ['tsx/cjs'],
     require: ['features/steps/**/*.ts'],
     paths: ['features/**/*.feature'],
-    format: ['progress-bar', ['html', 'reports/cucumber.html']],
+    format: ['progress'],
     formatOptions: { snippetInterface: 'async-await' },
   },
 };
