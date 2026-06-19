@@ -16,6 +16,7 @@ import {
   InMemoryPolicyRepository,
   InMemoryPreferenceRepository,
 } from '../../test/support/in-memory-repositories';
+import { noopEventLogger, noopMetrics } from '../../test/support/noop-observability';
 
 export class PreferencesWorld {
   readonly catalog = new InMemoryNotificationCatalog(NOTIFICATION_CATALOG_FIXTURE);
@@ -28,12 +29,18 @@ export class PreferencesWorld {
     this.preferences,
     this.catalog,
   );
-  readonly updatePreferences = new UpdatePreferencesUseCase(this.preferences);
+  readonly updatePreferences = new UpdatePreferencesUseCase(
+    this.preferences,
+    noopEventLogger,
+    noopMetrics,
+  );
   readonly evaluateNotification = new EvaluateNotificationUseCase(
     this.catalog,
     this.defaults,
     this.preferences,
     this.policies,
+    noopEventLogger,
+    noopMetrics,
   );
 
   view?: EffectivePreferencesView;

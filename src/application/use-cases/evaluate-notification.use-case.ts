@@ -9,6 +9,8 @@ import {
   DEFAULT_PREFERENCE_REPOSITORY,
   type DefaultPreferenceRepository,
 } from '../ports/default-preference.repository';
+import { EVENT_LOGGER, type EventLogger } from '../ports/event-logger';
+import { METRICS, type Metrics } from '../ports/metrics';
 import { NOTIFICATION_CATALOG, type NotificationCatalog } from '../ports/notification-catalog';
 import { POLICY_REPOSITORY, type PolicyRepository } from '../ports/policy.repository';
 import { PREFERENCE_REPOSITORY, type PreferenceRepository } from '../ports/preference.repository';
@@ -28,6 +30,8 @@ export class EvaluateNotificationUseCase {
     @Inject(DEFAULT_PREFERENCE_REPOSITORY) private readonly defaults: DefaultPreferenceRepository,
     @Inject(PREFERENCE_REPOSITORY) private readonly preferences: PreferenceRepository,
     @Inject(POLICY_REPOSITORY) private readonly policies: PolicyRepository,
+    @Inject(EVENT_LOGGER) private readonly logger: EventLogger,
+    @Inject(METRICS) private readonly metrics: Metrics,
   ) {}
 
   async execute(input: EvaluateInput): Promise<EvaluationResult> {
@@ -54,7 +58,7 @@ export class EvaluateNotificationUseCase {
       region: input.region,
     });
 
-    return evaluate({
+    const result = evaluate({
       defaultEnabled: defaultPreference?.enabled ?? false,
       userEnabled: override ? override.enabled : null,
       suppressibleInQuietHours: definition.suppressibleInQuietHours,
@@ -62,5 +66,17 @@ export class EvaluateNotificationUseCase {
       matchingPolicy,
       now: DateTime.fromISO(input.datetime, { zone: 'utc' }),
     });
+
+    this.logger.event('notification_decision', {
+      userId: input.userId,
+      notificationType: input.notificationType,
+      channel: input.channel,
+      region: input.region,
+      decision: result.decision,
+      reason: result.reason,
+    });
+    this.metrics.recordDecision(result.decision, result.reason);
+
+    return result;
   }
 }

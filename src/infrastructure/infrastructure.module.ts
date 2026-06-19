@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DEFAULT_PREFERENCE_REPOSITORY } from '../application/ports/default-preference.repository';
+import { EVENT_LOGGER } from '../application/ports/event-logger';
 import { IDEMPOTENCY_STORE } from '../application/ports/idempotency-store';
+import { METRICS } from '../application/ports/metrics';
 import { NOTIFICATION_CATALOG } from '../application/ports/notification-catalog';
 import { POLICY_REPOSITORY } from '../application/ports/policy.repository';
 import { PREFERENCE_REPOSITORY } from '../application/ports/preference.repository';
+import { PinoEventLogger } from './observability/pino-event-logger';
+import { PrometheusMetrics } from './observability/prometheus-metrics';
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaDefaultPreferenceRepository } from './repositories/prisma-default-preference.repository';
 import { PrismaIdempotencyStore } from './repositories/prisma-idempotency.store';
@@ -24,6 +28,9 @@ import { PrismaPreferenceRepository } from './repositories/prisma-preference.rep
     { provide: POLICY_REPOSITORY, useClass: PrismaPolicyRepository },
     { provide: NOTIFICATION_CATALOG, useClass: PrismaNotificationCatalog },
     { provide: IDEMPOTENCY_STORE, useClass: PrismaIdempotencyStore },
+    { provide: EVENT_LOGGER, useClass: PinoEventLogger },
+    PrometheusMetrics,
+    { provide: METRICS, useExisting: PrometheusMetrics },
   ],
   exports: [
     PrismaService,
@@ -32,6 +39,9 @@ import { PrismaPreferenceRepository } from './repositories/prisma-preference.rep
     POLICY_REPOSITORY,
     NOTIFICATION_CATALOG,
     IDEMPOTENCY_STORE,
+    EVENT_LOGGER,
+    METRICS,
+    PrometheusMetrics,
   ],
 })
 export class InfrastructureModule {}

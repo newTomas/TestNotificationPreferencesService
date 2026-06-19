@@ -6,6 +6,7 @@ import { GetEffectivePreferencesUseCase } from '../../src/application/use-cases/
 import { UpdatePreferencesUseCase } from '../../src/application/use-cases/update-preferences.use-case';
 import { makeQuietHours } from '../../src/domain/quiet-hours';
 import { notificationType } from '../../src/domain/types';
+import { noopEventLogger, noopMetrics } from '../support/noop-observability';
 import { PrismaService } from '../../src/infrastructure/prisma/prisma.service';
 import { PrismaDefaultPreferenceRepository } from '../../src/infrastructure/repositories/prisma-default-preference.repository';
 import { PrismaNotificationCatalog } from '../../src/infrastructure/repositories/prisma-notification-catalog';
@@ -22,7 +23,7 @@ const marketingEmail = notificationType('marketing_email');
 const transactionalEmail = notificationType('transactional_email');
 
 beforeAll(async () => {
-  container = await new PostgreSqlContainer('postgres:17').start();
+  container = await new PostgreSqlContainer('postgres:18').start();
   const databaseUrl = container.getConnectionUri();
   const env = { ...process.env, DATABASE_URL: databaseUrl };
   execSync('npx prisma migrate deploy', { env, stdio: 'inherit' });
@@ -39,9 +40,11 @@ beforeAll(async () => {
     defaultRepository,
     preferenceRepository,
     policyRepository,
+    noopEventLogger,
+    noopMetrics,
   );
   getPreferences = new GetEffectivePreferencesUseCase(defaultRepository, preferenceRepository, catalog);
-  updatePreferences = new UpdatePreferencesUseCase(preferenceRepository);
+  updatePreferences = new UpdatePreferencesUseCase(preferenceRepository, noopEventLogger, noopMetrics);
 });
 
 afterAll(async () => {

@@ -5,3 +5,6 @@ reports
 .git
 .env
 *.log
+src/generated
+features
+test
