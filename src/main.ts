@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -23,7 +24,7 @@ async function bootstrap() {
   const document = cleanupOpenApiDoc(SwaggerModule.createDocument(app, config));
   SwaggerModule.setup('docs', app, document);
 
-  const port = Number(process.env.PORT ?? 3000);
+  const port = app.get(ConfigService).getOrThrow<number>('PORT');
   await app.listen({ port, host: '0.0.0.0' });
 }
 
